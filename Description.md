@@ -16,12 +16,12 @@ Think of this as filling in a table where the columns are moments in time and th
 Filling in the table with the numbers computed in the diagram above, and adding a column 
 for time t = 0, and showing all the probability cells, it looks like this:<br/>
 
-|  End  |  0  |   0  |    0   |   |
+|   t=  |  0  |   1  |    2   | 3 |
 |:-----:|:---:|:----:|:------:|:-:|
 |   H   |  0  | 0.32 | 0.0448 |   |
 |   C   |  0  |  0.2 |  0.048 |   |
 | Start | 1.0 |   0  |    0   |   |
-|   t=  |  0  |   1  |    2   | 3 |
+|  End  |  0  |   0  |    0   |   |
 
 Each cell in the Viterbi table is filled with one of the Viterbi values computed in the diagram. 
 Like the diagram, the table is complete through t=2. 
