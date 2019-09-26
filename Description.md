@@ -16,7 +16,7 @@ Think of this as filling in a table where the columns are moments in time and th
 Filling in the table with the numbers computed in the diagram above, and adding a column 
 for time t = 0, and showing all the probability cells, it looks like this:<br/>
 
-|   t=  |  0  |   1  |    2   | 3 |
+|  t =  |  0  |   1  |    2   | 3 |
 |:-----:|:---:|:----:|:------:|:-:|
 |   H   |  0  | 0.32 | 0.0448 |   |
 |   C   |  0  |  0.2 |  0.048 |   |
@@ -34,4 +34,4 @@ The Viterbi probability written as v2(2) repesents the probability of the highes
 
 * (10 points) 
   * Report the best path through the HMM that fits the data.
-  * Justify your answer by adding backtraces to your table, including the backtraces for column 3. This figure illustrates the idea. The dashed lines represent the best path associated with each Viterbi value. In your submission you can just explain textually how you would modify the figure, e.g., "Add a backtrace link (dashed line) to the backtrace figure going from STATE? at time t = 3 to STATE? at time t = 2." 
+  * Justify your answer by adding backtraces to your table, including the backtraces for column 3. This [figure](https://gawron.sdsu.edu/compling/course_core/comp_ling_assignments/_images/viterbi_with_backtrace_computation.jpg) illustrates the idea. The dashed lines represent the best path associated with each Viterbi value. In your submission you can just explain textually how you would modify the figure, e.g., "Add a backtrace link (dashed line) to the backtrace figure going from STATE? at time t = 3 to STATE? at time t = 2." 
