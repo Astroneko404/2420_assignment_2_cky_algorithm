@@ -1,6 +1,5 @@
 from decimal import Decimal
 from collections import defaultdict
-from Node import Node
 import re
 
 
@@ -101,7 +100,7 @@ class CKY:
                         # print(rule, prob)
                         self.grammar[parent][rule] = prob * base_prob
 
-        print_nested_dict(self.grammar)
+        # print_nested_dict(self.grammar)
 
     def check_prob(self):
         for parent in self.grammar:
@@ -126,11 +125,11 @@ class CKY:
                 for rule, prob in self.grammar[A].items():
                     if len(rule) == 1:
                         B = rule[0]
-                        print(A, B)
+                        # print(A, B)
                         if B in table[j-1][j]:
                             table[j-1][j][A] = table[j-1][j][B] * prob
 
-            # print(table[0][1])
+            # print(table[1][2])
 
             for i in reversed(range(0, j - 1)):
                 for k in range(i+1, j):
@@ -139,19 +138,19 @@ class CKY:
                         for rule, prob in self.grammar[A].items():
                             if len(rule) == 2:
                                 B, C = rule[0], rule[1]
-                                print(B, table[i][k])
-                                print(C, table[k][j])
-                                print()
+
                                 if B in table[i][k] and C in table[k][j]:
-                                    # print(i, j, k)
-                                    # print(B, C)
-                                    # print(prob * table[i][k][B] * table[k][j][C])
-                                    if table[i][j][A] < prob * table[i][k][B] * table[k][j][C]:
+                                    # print(B, table[i][k])
+                                    # print(C, table[k][j])
+                                    # print()
+                                    if A not in table[i][j]:
+                                        table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
+                                    elif table[i][j][A] < prob * table[i][k][B] * table[k][j][C]:
                                         table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
                                         back[i][j][A] = (k, B, C)
 
         # self.build_tree(back, table, n)
-        # for i in range(len(table)):
-        #     for j in range(len(table[0])):
-        #         print(i, j, table[i][j])
+        for i in range(len(table)):
+            for j in range(len(table[0])):
+                print(i, j, table[i][j])
         return

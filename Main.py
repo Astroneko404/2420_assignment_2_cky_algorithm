@@ -10,4 +10,4 @@ if __name__ == '__main__':
     else:
         my_cky = CKY(sys.argv[1])
         words = sys.argv[2].lower().split()
-        # my_cky.prob_cky(words)
+        my_cky.prob_cky(words)
