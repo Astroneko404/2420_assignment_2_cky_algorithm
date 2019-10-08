@@ -3,9 +3,6 @@ from collections import defaultdict
 import re
 
 
-# terminal = ['Det', 'Noun', 'Verb', 'Pronoun']
-
-
 def print_nested_dict(d):
     """
     :param d: The nested defaultdict to be printed
@@ -22,7 +19,9 @@ def print_nested_dict(d):
 
 def print_table(t):
     for i in range(len(t)):
-        print(t[i])
+        for j in range(1, len(t[0])):
+            if j > i:
+                print(i, j, t[i][j])
     return
 
 
@@ -33,6 +32,8 @@ class CKY:
         self.lexicon = defaultdict(lambda: defaultdict(lambda: Decimal(0.0)))
         self.bin_map = defaultdict(lambda: '')  # X_n -> (t_1, t_2)
         self.bin_map_inverted = defaultdict(lambda: '')  # (t_1, t_2) -> X_n
+        self.back = None
+        self.table = None
 
         self.build_pcfg()
         self.binarize()
@@ -108,9 +109,35 @@ class CKY:
         for parent in self.lexicon:
             assert sum([self.lexicon[parent][i] for i in self.lexicon[parent]]) == Decimal(1.0)
 
-    def build_tree(self, back, table, n):
-        print(back[1][n])
-        return
+    def print_tree_level(self, i, j, tag, words):
+        res = ''
+        if tag in self.back[i][j]:
+            if len(self.back[i][j][tag]) == 4:
+                if tag not in self.bin_map:
+                    res += '[' + tag
+
+                res += self.print_tree_level(self.back[i][j][tag][0][0],
+                                             self.back[i][j][tag][0][1],
+                                             self.back[i][j][tag][2],
+                                             words)
+                res += self.print_tree_level(self.back[i][j][tag][1][0],
+                                             self.back[i][j][tag][1][1],
+                                             self.back[i][j][tag][3],
+                                             words)
+
+                if tag not in self.bin_map:
+                    res += ']'
+            else:
+                res += '[' + tag + '[' + self.back[i][j][tag][1] + ' ' + words[j-1] + ']]'
+        elif tag in self.table[i][j]:
+            res += '[' + tag + ' ' + words[j-1] + ']'
+        return res
+
+    def build_tree(self, words):
+        # print_table(self.back)
+        res = self.print_tree_level(0, len(words), 'S', words)
+        # print(res)
+        return res
 
     def prob_cky(self, words):
         n = len(words)
@@ -128,6 +155,7 @@ class CKY:
                         # print(A, B)
                         if B in table[j-1][j]:
                             table[j-1][j][A] = table[j-1][j][B] * prob
+                            back[j-1][j][A] = ((j-1, j), B)
 
             # print(table[1][2])
 
@@ -147,10 +175,11 @@ class CKY:
                                         table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
                                     elif table[i][j][A] < prob * table[i][k][B] * table[k][j][C]:
                                         table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
-                                        back[i][j][A] = (k, B, C)
+                                    back[i][j][A] = ((i, k), (k, j), B, C)
 
-        # self.build_tree(back, table, n)
-        for i in range(len(table)):
-            for j in range(len(table[0])):
-                print(i, j, table[i][j])
-        return
+        self.back = back
+        self.table = table
+        result = self.build_tree(words)
+        # print_table(table)
+        # print_table(back)
+        return result
