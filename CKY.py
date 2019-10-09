@@ -1,5 +1,5 @@
 from decimal import Decimal
-from collections import defaultdict
+from collections import defaultdict, deque
 import re
 
 
@@ -23,6 +23,36 @@ def print_table(t):
             if j > i:
                 print(i, j, t[i][j])
     return
+
+
+def parse_tree_span(s, words):
+    i = 0  # pointer for words
+    idx = 0  # pointer for s
+    word = ''
+    queue = deque()
+    result = []
+
+    while idx < len(s):
+        if s[idx] != '[' and s[idx] != ']':
+            word += s[idx]
+        else:
+            if s[idx] == '[' and word:
+                queue.append((word, i))
+                word = ''
+            elif s[idx] == ']':
+                word = word.split()
+                if len(word) == 2:
+                    assert word[1] == words[i]
+                    while idx+1 < len(s) and s[idx+1] == ']':
+                        tag, start = queue.pop()
+                        result.append((tag, start, i))
+                        idx += 1
+                word = ''
+                i += 1
+        idx += 1
+
+    result = sorted(result, key=lambda y: (y[1], -y[2]))
+    return result
 
 
 class CKY:

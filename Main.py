@@ -1,4 +1,4 @@
-from CKY import CKY
+from CKY import CKY, parse_tree_span
 import sys
 
 
@@ -12,3 +12,5 @@ if __name__ == '__main__':
         words = sys.argv[2].lower().split()
         pred = my_cky.prob_cky(words)
         print(pred)
+        pred_span = parse_tree_span(pred, words)
+        print(pred_span)
