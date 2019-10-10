@@ -1,0 +1,33 @@
+"Book the flight through Houston"
+Sentence accepted:
+[S[Verb book][NP[Det the][Nominal[Noun flight][PP[Preposition through][Proper-Noun houston]]]]]
+Recall: 0.6666666666666666	Precision: 1.0
+Score: 3.6450000000000000E-8
+
+[S[VP[Verb book][NP[Det the][Noun flight]]][PP[Preposition through][Proper-Noun houston]]]
+Recall: 0.3333333333333333	Precision: 0.5
+Score: 1.09350000000000000E-7
+
+[S[Verb book][NP[Det the][Noun flight]][PP[Preposition through][Proper-Noun houston]]]
+Recall: 0.3333333333333333	Precision: 0.6666666666666666
+Score: 3.645000000000000E-7
+
+"The flight includes a meal"
+Sentence accepted:
+[S[NP[Det the][Noun flight]][VP[Verb include][NP[Det a][Noun meal]]]]
+Recall: 0.6666666666666666	Precision: 1.0
+Score: 0.0000029160000000000000
+
+"I book a flight to Houston"
+Sentence accepted:
+[S[Pronoun i][VP[Verb book][NP[Det a][Nominal[Noun flight][PP[Preposition to][Proper-Noun houston]]]]]]
+Recall: 0.42857142857142855	Precision: 0.6
+Score: 2.449440000000000000000E-7
+
+[S[Pronoun i][VP[VP[Verb book][NP[Det a][Noun flight]]][PP[Preposition to][Proper-Noun houston]]]]
+Recall: 0.5714285714285714	Precision: 0.8
+Score: 7.348320000000000000000E-7
+
+[S[Pronoun i][VP[Verb book][NP[Det a][Noun flight]][PP[Preposition to][Proper-Noun houston]]]]
+Recall: 0.5714285714285714	Precision: 1.0
+Score: 0.00000244944000000000000000

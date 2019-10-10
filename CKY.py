@@ -1,6 +1,19 @@
 from decimal import Decimal
 from collections import defaultdict, deque
+import numbers
 import re
+
+
+def evaluation(pred, true):
+    """
+    :param pred: Tree span for prediction
+    :param true: Tree span for reference
+    :return: recall and precision
+    """
+    pred_correct = [x for x in pred if x in true]
+    recall = len(pred_correct) / len(true)
+    precision = len(pred_correct) / len(pred)
+    return recall, precision
 
 
 def print_nested_dict(d):
@@ -42,8 +55,8 @@ def parse_tree_span(s, words):
             elif s[idx] == ']':
                 word = word.split()
                 if len(word) == 2:
-                    assert word[1] == words[i]
-                    while idx+1 < len(s) and s[idx+1] == ']':
+                    # assert word[1] == words[i]
+                    while idx + 1 < len(s) and s[idx + 1] == ']':
                         tag, start = queue.pop()
                         result.append((tag, start, i))
                         idx += 1
@@ -139,77 +152,153 @@ class CKY:
         for parent in self.lexicon:
             assert sum([self.lexicon[parent][i] for i in self.lexicon[parent]]) == Decimal(1.0)
 
-    def print_tree_level(self, i, j, tag, words):
+    def print_tree_level(self, tup, words):
         res = ''
-        if tag in self.back[i][j]:
-            if len(self.back[i][j][tag]) == 4:
-                if tag not in self.bin_map:
-                    res += '[' + tag
 
-                res += self.print_tree_level(self.back[i][j][tag][0][0],
-                                             self.back[i][j][tag][0][1],
-                                             self.back[i][j][tag][2],
-                                             words)
-                res += self.print_tree_level(self.back[i][j][tag][1][0],
-                                             self.back[i][j][tag][1][1],
-                                             self.back[i][j][tag][3],
-                                             words)
+        if len(tup) == 7:
+            B, C, B_tag, C_tag, prob_B, prob_C, prob_A = tup
+            B_i, B_j = B
+            C_i, C_j = C
+            next_B = None
+            next_C = None
 
-                if tag not in self.bin_map:
-                    res += ']'
-            else:
-                res += '[' + tag + '[' + self.back[i][j][tag][1] + ' ' + words[j-1] + ']]'
-        elif tag in self.table[i][j]:
-            res += '[' + tag + ' ' + words[j-1] + ']'
+            for sub_tup in self.back[B_i][B_j][B_tag]:
+                if isinstance(sub_tup, numbers.Number):
+                    prob_next = sub_tup
+                    if prob_next == prob_B:
+                        next_B = ((B_i, B_j), B_tag, sub_tup)
+                        break
+                else:
+                    prob_next = sub_tup[-1]
+                    if prob_next == prob_B:
+                        next_B = sub_tup
+                        break
+
+            for sub_tup in self.back[C_i][C_j][C_tag]:
+                if isinstance(sub_tup, numbers.Number):
+                    prob_next = sub_tup
+                    if prob_next == prob_C:
+                        next_C = ((C_i, C_j), C_tag, sub_tup)
+                        break
+                else:
+                    prob_next = sub_tup[-1]
+                    if prob_next == prob_C:
+                        next_C = sub_tup
+                        break
+
+            # print(next_B)
+            # print(next_C)
+
+            if B_tag not in self.bin_map:
+                res += '['
+                if len(next_B) != 3:
+                    res += B_tag
+            res += self.print_tree_level(next_B, words)
+            if B_tag not in self.bin_map: res += ']'
+
+            if C_tag not in self.bin_map:
+                res += '['
+                if len(next_C) != 3:
+                    res += C_tag
+            res += self.print_tree_level(next_C, words)
+            if C_tag not in self.bin_map: res += ']'
+
+        elif len(tup) == 3:
+            i, j = tup[0]
+            tag = tup[1]
+            res += tag + ' ' + words[j - 1]
         return res
 
     def build_tree(self, words):
-        # print_table(self.back)
-        res = self.print_tree_level(0, len(words), 'S', words)
-        # print(res)
-        return res
+        start = self.back[0][len(words)]
+        if 'S' in start:
+            result_list = []
+            for tup in start['S']:
+                res = '[S' + self.print_tree_level(tup, words) + ']'
+                score = tup[-1]
+                result_list.append((res, score))
+
+            print('Sentence accepted:')
+            return result_list
+        else:
+            print('Sentence rejected')
+            return None
 
     def prob_cky(self, words):
         n = len(words)
-        table = [[dict() for i in range(n+1)] for j in range(n+1)]
-        back = [[dict() for i in range(n+1)] for j in range(n+1)]
+        table = [[dict() for i in range(n + 1)] for j in range(n + 1)]
+        back = [[dict() for i in range(n + 1)] for j in range(n + 1)]
 
-        for j in range(1, n+1):
+        def is_terminal(tag):
+            return tag in self.lexicon
+
+        for j in range(1, n + 1):
+            exist = False
             for A in self.lexicon:
-                if words[j-1] in self.lexicon[A]:
-                    table[j-1][j][A] = (self.lexicon[A][words[j-1]])
+                if words[j - 1] in self.lexicon[A]:
+                    # table[j-1][j][A] = (self.lexicon[A][words[j-1]])
+                    back[j - 1][j][A] = [(self.lexicon[A][words[j - 1]])]
+                    exist = True
+            if not exist:  # Edge cases
+                print('The word "' + words[j - 1] + '" does not exist in the lexicon!')
+                return ''
+            # print_table(back)
             for A in self.grammar:
                 for rule, prob in self.grammar[A].items():
                     if len(rule) == 1:
                         B = rule[0]
                         # print(A, B)
-                        if B in table[j-1][j]:
-                            table[j-1][j][A] = table[j-1][j][B] * prob
-                            back[j-1][j][A] = ((j-1, j), B)
+                        # if B in table[j-1][j]:
+                        if B in back[j - 1][j]:
+                            # table[j-1][j][A] = table[j-1][j][B] * prob
+                            # print(back[j - 1][j])
+                            if A in back[j - 1][j]:
+                                back[j - 1][j][A].append(((j - 1, j), B, back[j - 1][j][B][0] * prob))
+                            else:
+                                back[j - 1][j][A] = [((j - 1, j), B, back[j - 1][j][B][0] * prob)]
 
             # print(table[1][2])
+            # print_table(back)
+            # print()
 
             for i in reversed(range(0, j - 1)):
-                for k in range(i+1, j):
+                for k in range(i + 1, j):
                     for A in self.grammar:
                         # print(self.grammar[A])
                         for rule, prob in self.grammar[A].items():
                             if len(rule) == 2:
                                 B, C = rule[0], rule[1]
 
-                                if B in table[i][k] and C in table[k][j]:
-                                    # print(B, table[i][k])
-                                    # print(C, table[k][j])
-                                    # print()
-                                    if A not in table[i][j]:
-                                        table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
-                                    elif table[i][j][A] < prob * table[i][k][B] * table[k][j][C]:
-                                        table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
-                                    back[i][j][A] = ((i, k), (k, j), B, C)
+                                if B in back[i][k] and C in back[k][j]:
+                                    for B_sub in back[i][k][B]:
+                                        for C_sub in back[k][j][C]:
+                                            # print(B, B_sub)
+                                            # print(C, C_sub)
+                                            prob_B = Decimal(0.0)
+                                            prob_C = Decimal(0.0)
+                                            # print()
+                                            if isinstance(B_sub, numbers.Number):
+                                                prob_B = B_sub
+                                            else:
+                                                prob_B = B_sub[-1]
+
+                                            if isinstance(C_sub, numbers.Number):
+                                                prob_C = C_sub
+                                            else:
+                                                prob_C = C_sub[-1]
+                                            prob_A = prob * prob_B * prob_C
+                                            # if A not in table[i][j]:
+                                            #     table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
+                                            # elif table[i][j][A] < prob * table[i][k][B] * table[k][j][C]:
+                                            #     table[i][j][A] = prob * table[i][k][B] * table[k][j][C]
+                                            if A not in back[i][j]:
+                                                back[i][j][A] = [((i, k), (k, j), B, C, prob_B, prob_C, prob_A)]
+                                            else:
+                                                back[i][j][A].append(((i, k), (k, j), B, C, prob_B, prob_C, prob_A))
 
         self.back = back
         self.table = table
-        result = self.build_tree(words)
         # print_table(table)
         # print_table(back)
+        result = self.build_tree(words)
         return result
