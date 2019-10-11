@@ -114,22 +114,26 @@ class CKY:
 
         for parent in list(self.grammar):
             for child in list(self.grammar[parent]):
-                if len(child) > 2:  # Since there's no child with terminals >=4, we don't need to use while loop
-                    tag = child[:2]
-                    rest = child[2:]
-                    if tag not in self.bin_map_inverted:
-                        label = 'X' + str(bin_count)
+                if len(child) > 2:
+                    origin_child = child
+                    while len(child) != 2:
+                        tag = child[:2]
+                        rest = child[2:]
 
-                        self.bin_map[label] = tag
-                        self.bin_map_inverted[tag] = label
-                        grammar_tmp[parent][tuple([label]) + rest] = grammar_tmp[parent].pop(child)
-                        grammar_tmp[label][tag] = Decimal(1.0)
+                        if tag not in self.bin_map_inverted:
+                            label = 'X' + str(bin_count)
 
-                        bin_count += 1
+                            self.bin_map[label] = tag
+                            self.bin_map_inverted[tag] = label
+                            grammar_tmp[label][tag] = Decimal(1.0)
 
-                    else:
-                        label = self.bin_map_inverted[tag]
-                        grammar_tmp[parent][tuple([label]) + rest] = grammar_tmp[parent].pop(child)
+                            bin_count += 1
+
+                        else:
+                            label = self.bin_map_inverted[tag]
+                        child = tuple([label]) + rest
+
+                    grammar_tmp[parent][tuple([label]) + rest] = grammar_tmp[parent].pop(origin_child)
 
         self.grammar = grammar_tmp
 
